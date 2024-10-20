@@ -11,13 +11,14 @@ def handleResponse(connectionSocket, addr):
     while True:
         messageSection = connectionSocket.recv(1024).decode()
         full_message.append(messageSection)
+        print(messageSection)
         if "\r\n\r\n" in messageSection:
             break
     message = "".join(full_message)
     print(message)
     request = message.split("\r\n")
     requestLine = request[0].split(" ")
-    if "GET" in requestLine[0]:
+    if "GET" == requestLine[0]:
         filePath = requestLine[1].lstrip("/")
 
         headers = {}
