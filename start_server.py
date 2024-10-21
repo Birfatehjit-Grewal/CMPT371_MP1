@@ -8,6 +8,7 @@ def handleResponse(connectionSocket, addr):
     print("start Message")
     full_message = []
     unImplemented = ["HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE"]
+    implemented = ["GET"]
     while True:
         messageSection = connectionSocket.recv(1024).decode()
         full_message.append(messageSection)
@@ -30,8 +31,10 @@ def handleResponse(connectionSocket, addr):
         try:
             lastModifiedTimestamp = os.path.getmtime(filePath)
             modifiedTime = datetime.utcfromtimestamp(lastModifiedTimestamp)
+            if "Host" not in headers:
+                response = "HTTP/1.1 400 Bad Request\r\n\r\n"
 
-            if "If-Modified-Since" in headers:
+            elif "If-Modified-Since" in headers:
                 clientTimeString = headers["If-Modified-Since"]
                 try:
                     client_time = datetime.strptime(
@@ -59,10 +62,9 @@ def handleResponse(connectionSocket, addr):
         except FileNotFoundError:
             response = "HTTP/1.1 404 Not Found\r\n\r\n"
     else:
-        if requestLine[0] in unImplemented:
+        if requestLine[0] not in implemented:
             response = "HTTP/1.1 501 Not Implemented\r\n\r\n"
-        else:
-            response = "HTTP/1.1 400 Bad request\r\n\r\n"
+
     connectionSocket.sendall(response.encode())
     connectionSocket.close()
     print("Message Complete")
