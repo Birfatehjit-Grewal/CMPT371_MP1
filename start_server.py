@@ -31,8 +31,9 @@ def handleResponse(connectionSocket, addr):
         try:
             lastModifiedTimestamp = os.path.getmtime(filePath)
             modifiedTime = datetime.utcfromtimestamp(lastModifiedTimestamp)
+            modifiedTime = modifiedTime.replace(microsecond=0)
             if "Host" not in headers:
-                response = "HTTP/1.1 400 Bad Request\r\n\r\n"
+                response = "HTTP/1.1 400 Bad Request\r\nVia: Origin_Server\r\n\r\n"
 
             elif "If-Modified-Since" in headers:
                 clientTimeString = headers["If-Modified-Since"]
@@ -40,32 +41,35 @@ def handleResponse(connectionSocket, addr):
                     client_time = datetime.strptime(
                         clientTimeString, "%a, %d %b %Y %H:%M:%S GMT"
                     )
+                    print(client_time)
+                    print(modifiedTime)
+                    
                     if client_time >= modifiedTime:
-                        response = "HTTP/1.1 304 Not Modified\r\n\r\n"
+                        response = "HTTP/1.1 304 Not Modified\r\nVia: Origin_Server\r\n\r\n"
                     else:
                         file = open(filePath, "r")
                         file_content = file.read()
                         formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
                         response = (
-                            f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
+                            f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                             + file_content
                         )
                 except ValueError:
-                    response = "HTTP/1.1 400 Bad request\r\n\r\n"
+                    response = "HTTP/1.1 400 Bad request\r\nVia: Origin_Server\r\n\r\n"
 
             else:
                 file = open(filePath, "r")
                 file_content = file.read()
                 formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
                 response = (
-                    f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
+                    f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                     + file_content
                 )
         except FileNotFoundError:
-            response = "HTTP/1.1 404 Not Found\r\n\r\n"
+            response = "HTTP/1.1 404 Not Found\r\nVia: Origin_Server\r\n\r\n"
     else:
         if requestLine[0] not in implemented:
-            response = "HTTP/1.1 501 Not Implemented\r\n\r\n"
+            response = "HTTP/1.1 501 Not Implemented\r\nVia: Origin_Server\r\n\r\n"
 
     connectionSocket.sendall(response.encode())
     connectionSocket.close()
@@ -74,7 +78,7 @@ def handleResponse(connectionSocket, addr):
 
 
 if __name__ == "__main__":
-    serverPort = 80
+    serverPort = 8080
     serverSocket = socket(AF_INET, SOCK_STREAM)
 
     serverSocket.bind(("", serverPort))
