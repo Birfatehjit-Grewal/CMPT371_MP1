@@ -44,8 +44,9 @@ def handleResponse(connectionSocket, addr):
                         else:
                             file = open(filePath, "r")
                             file_content = file.read()
+                            contentLength = len(file_content)
                             response = (
-                                f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nVia: Proxy_Server\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
+                                f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nVia: Proxy_Server\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
                                 + file_content
                             )
                     except ValueError:
@@ -60,8 +61,9 @@ def handleResponse(connectionSocket, addr):
                 if "304 Not Modified" in responseOrigin:
                     file = open(filePath, "r")
                     file_content = file.read()
+                    contentLength = len(file_content)
                     response = (
-                        f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nVia: Proxy_Server\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
+                        f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nVia: Proxy_Server\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
                         + file_content
                     )
         except FileNotFoundError:

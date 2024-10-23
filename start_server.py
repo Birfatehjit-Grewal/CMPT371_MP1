@@ -49,9 +49,10 @@ def handleResponse(connectionSocket, addr):
                     else:
                         file = open(filePath, "r")
                         file_content = file.read()
+                        contentLength = len(file_content)
                         formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
                         response = (
-                            f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
+                            f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                             + file_content
                         )
                 except ValueError:
@@ -60,9 +61,10 @@ def handleResponse(connectionSocket, addr):
             else:
                 file = open(filePath, "r")
                 file_content = file.read()
+                contentLength = len(file_content)
                 formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
                 response = (
-                    f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
+                    f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                     + file_content
                 )
         except FileNotFoundError:
