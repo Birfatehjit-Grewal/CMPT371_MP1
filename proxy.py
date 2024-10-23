@@ -1,15 +1,15 @@
 import os
+import sys
 from datetime import datetime
 from socket import AF_INET, SOCK_STREAM, socket
 from threading import Thread
-import sys
 
 originServerPort = 8080
 originServerName = sys.argv[1]
 
+
 def handleResponse(connectionSocket, addr):
     print("start Message")
-    implemented = ["GET"]
     requestHTTP = getrequest(connectionSocket)
     request = requestHTTP.split("\r\n")
     requestLine = request[0].split(" ")
@@ -31,14 +31,14 @@ def handleResponse(connectionSocket, addr):
             if "If-Modified-Since" in headers:
                 clientTimeString = headers["If-Modified-Since"]
                 headers["If-Modified-Since"] = formattedModifiedTime
-                newRequest = changeOtherRequests(request[0],headers)
+                newRequest = changeOtherRequests(request[0], headers)
                 responseOrigin = requestOrigin(newRequest)
-                
+
                 if "304 Not Modified" in responseOrigin:
                     try:
                         client_time = datetime.strptime(
                             clientTimeString, "%a, %d %b %Y %H:%M:%S GMT"
-                            )
+                        )
                         if client_time >= modifiedTime:
                             response = responseOrigin
                         else:
@@ -50,13 +50,15 @@ def handleResponse(connectionSocket, addr):
                                 + file_content
                             )
                     except ValueError:
-                        response = "HTTP/1.1 400 Bad request\r\nVia: Proxy_Server\r\n\r\n"
+                        response = (
+                            "HTTP/1.1 400 Bad request\r\nVia: Proxy_Server\r\n\r\n"
+                        )
                 else:
                     response = responseOrigin
 
             else:
                 headers["If-Modified-Since"] = formattedModifiedTime
-                newRequest = changeOtherRequests(request[0],headers)
+                newRequest = changeOtherRequests(request[0], headers)
                 responseOrigin = requestOrigin(newRequest)
                 if "304 Not Modified" in responseOrigin:
                     file = open(filePath, "r")
@@ -66,22 +68,26 @@ def handleResponse(connectionSocket, addr):
                         f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nVia: Proxy_Server\r\nLast-Modified: {formattedModifiedTime}\r\n\r\n"
                         + file_content
                     )
+                else:
+                    response = responseOrigin
         except FileNotFoundError:
-            newRequest = changeOtherRequests(request[0],headers)
+            newRequest = changeOtherRequests(request[0], headers)
             response = requestOrigin(newRequest)
     else:
-        if requestLine[0] not in implemented:
-            if ("Cache-Control" in requestHTTP) and ("no-store" in headers['Cache-Control']):
-                newRequest = changeOtherRequests(request[0],headers)
-                response = requestOrigin(newRequest)
-            else:
-                response = "HTTP/1.1 501 Not Implemented\r\nVia: Proxy_Server\r\n\r\n"
+        if ("Cache-Control" in requestHTTP) and (
+            "no-store" in headers["Cache-Control"]
+        ):
+            newRequest = changeOtherRequests(request[0], headers)
+            response = requestOrigin(newRequest)
+        else:
+            response = "HTTP/1.1 501 Not Implemented\r\nVia: Proxy_Server\r\n\r\n"
 
     connectionSocket.sendall(response.encode())
     connectionSocket.close()
     print("Message Complete")
     print(response)
-    
+
+
 def requestOrigin(request):
     clientSocket = socket(AF_INET, SOCK_STREAM)
     clientSocket.connect((originServerName, originServerPort))
@@ -92,14 +98,16 @@ def requestOrigin(request):
         if not responseSection:
             break
         fullResponse.append(responseSection)
-    responseOrigin = "".join(fullResponse)  
+    responseOrigin = "".join(fullResponse)
     return responseOrigin
-        
+
+
 def changeOtherRequests(requestline, headers):
-    headers['Host'] = originServerName + ": " +originServerPort
+    headers["Host"] = originServerName + ": " + str(originServerPort)
     headersCombined = "\r\n".join([f"{key}: {value}" for key, value in headers.items()])
     full_request = f"{requestline}\r\n{headersCombined}\r\n\r\n"
     return full_request
+
 
 def getrequest(connectionSocket):
     full_message = []
@@ -109,11 +117,14 @@ def getrequest(connectionSocket):
         print(requestSection)
         if "\r\n\r\n" in requestSection:
             break
+        if "\r\n" == requestSection:
+            break
     request = "".join(full_message)
     return request
 
+
 if __name__ == "__main__":
-    
+
     serverPort = 80
     serverSocket = socket(AF_INET, SOCK_STREAM)
 

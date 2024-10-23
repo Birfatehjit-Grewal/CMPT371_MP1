@@ -7,13 +7,14 @@ from threading import Thread
 def handleResponse(connectionSocket, addr):
     print("start Message")
     full_message = []
-    unImplemented = ["HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE"]
     implemented = ["GET"]
     while True:
         messageSection = connectionSocket.recv(1024).decode()
         full_message.append(messageSection)
         print(messageSection)
         if "\r\n\r\n" in messageSection:
+            break
+        elif "\r\n" == messageSection:
             break
     message = "".join(full_message)
     print(message)
@@ -43,14 +44,18 @@ def handleResponse(connectionSocket, addr):
                     )
                     print(client_time)
                     print(modifiedTime)
-                    
+
                     if client_time >= modifiedTime:
-                        response = "HTTP/1.1 304 Not Modified\r\nVia: Origin_Server\r\n\r\n"
+                        response = (
+                            "HTTP/1.1 304 Not Modified\r\nVia: Origin_Server\r\n\r\n"
+                        )
                     else:
                         file = open(filePath, "r")
                         file_content = file.read()
                         contentLength = len(file_content)
-                        formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
+                        formattedModifiedTime = modifiedTime.strftime(
+                            "%a, %d %b %Y %H:%M:%S GMT"
+                        )
                         response = (
                             f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                             + file_content
@@ -62,7 +67,9 @@ def handleResponse(connectionSocket, addr):
                 file = open(filePath, "r")
                 file_content = file.read()
                 contentLength = len(file_content)
-                formattedModifiedTime = modifiedTime.strftime("%a, %d %b %Y %H:%M:%S GMT")
+                formattedModifiedTime = modifiedTime.strftime(
+                    "%a, %d %b %Y %H:%M:%S GMT"
+                )
                 response = (
                     f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {contentLength}\r\nLast-Modified: {formattedModifiedTime}\r\nVia: Origin_Server\r\n\r\n"
                     + file_content
